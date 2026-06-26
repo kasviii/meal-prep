@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Weekly Plate — Meal Prep Optimizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#15130f;
+  --bg-soft:#1a170f;
+  --card:#211d17;
+  --card-alt:#28231a;
+  --border:rgba(237,232,222,0.10);
+  --border-strong:rgba(237,232,222,0.20);
+  --text:#ede8de;
+  --text-muted:#a39c8d;
+  --text-faint:#726b5c;
+  --amber:#e8a33d;
+  --amber-soft:rgba(232,163,61,0.14);
+  --amber-strong:#f3b969;
+  --sage:#8aa67d;
+  --sage-soft:rgba(138,166,125,0.14);
+  --rust:#cf6243;
+  --rust-soft:rgba(207,98,67,0.15);
+  --shadow:0 20px 50px -20px rgba(0,0,0,0.6);
+  --radius:14px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(circle at 15% 0%, rgba(232,163,61,0.06), transparent 45%),
+    radial-gradient(circle at 100% 30%, rgba(138,166,125,0.05), transparent 40%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:15.5px;
+  line-height:1.5;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:600;margin:0;letter-spacing:-0.01em;}
+::selection{background:var(--amber-soft);}
+a{color:var(--amber-strong);text-decoration:none;}
+a:hover{text-decoration:underline;}
+button{font-family:'Inter',sans-serif;cursor:pointer;}
+input,select,textarea{font-family:'Inter',sans-serif;}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+
+.numeral{font-family:'Fraunces',serif;font-style:italic;font-weight:500;}
+
+/* ============ LAYOUT SHELL ============ */
+#app{max-width:1180px;margin:0 auto;padding:28px 20px 80px;}
+
+.brandbar{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:30px;flex-wrap:wrap;gap:10px;
+}
+.brand{display:flex;align-items:baseline;gap:10px;}
+.brand .mark{
+  font-family:'Fraunces',serif;font-style:italic;font-weight:600;
+  font-size:26px;color:var(--amber-strong);
+}
+.brand .name{font-family:'Fraunces',serif;font-weight:600;font-size:21px;}
+.brand .tag{color:var(--text-faint);font-size:12.5px;letter-spacing:0.04em;text-transform:uppercase;}
+.start-over-link{
+  background:none;border:none;color:var(--text-faint);font-size:12.5px;
+  letter-spacing:0.03em;text-transform:uppercase;padding:6px 0;
+}
+.start-over-link:hover{color:var(--rust);}
+
+/* ============ WIZARD ============ */
+.wizard-wrap{max-width:760px;margin:0 auto;}
+
+.stepper{display:flex;justify-content:space-between;margin-bottom:34px;position:relative;}
+.stepper::before{
+  content:'';position:absolute;top:17px;left:24px;right:24px;height:1px;
+  background:var(--border);z-index:0;
+}
+.step-node{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;flex:1;}
+.step-node .dot{
+  width:34px;height:34px;border-radius:50%;background:var(--card);
+  border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif;font-style:italic;font-size:15px;color:var(--text-faint);
+  transition:all .25s ease;
+}
+.step-node.done .dot{background:var(--amber-soft);border-color:var(--amber);color:var(--amber-strong);}
+.step-node.current .dot{background:var(--amber);border-color:var(--amber);color:#1a1408;box-shadow:0 0 0 4px var(--amber-soft);}
+.step-node .label{font-size:11px;color:var(--text-faint);text-align:center;max-width:90px;letter-spacing:0.01em;}
+.step-node.current .label{color:var(--text-muted);}
+.step-node.clickable{cursor:pointer;}
+
+.wizard-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:34px 36px;box-shadow:var(--shadow);
+}
+.chapter-eyebrow{
+  font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber-strong);
+  margin-bottom:6px;font-weight:600;
+}
+.chapter-title{font-size:25px;margin-bottom:6px;}
+.chapter-sub{color:var(--text-muted);font-size:14px;margin-bottom:26px;max-width:560px;}
+
+.field-group{margin-bottom:24px;}
+.field-label{display:block;font-size:13.5px;font-weight:600;margin-bottom:10px;color:var(--text);}
+.field-hint{display:block;font-size:12.5px;color:var(--text-faint);margin-top:6px;}
+
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+.choice-card{
+  border:1px solid var(--border);background:var(--bg-soft);border-radius:10px;
+  padding:13px 14px;cursor:pointer;transition:all .15s ease;position:relative;
+}
+.choice-card:hover{border-color:var(--border-strong);}
+.choice-card input{position:absolute;opacity:0;pointer-events:none;}
+.choice-card .ct{font-weight:600;font-size:13.5px;display:block;}
+.choice-card .cd{font-size:11.5px;color:var(--text-faint);display:block;margin-top:3px;}
+.choice-card.checked{border-color:var(--amber);background:var(--amber-soft);}
+.choice-card.checked .ct{color:var(--amber-strong);}
+
+.pill-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.pill{
+  border:1px solid var(--border-strong);background:var(--bg-soft);color:var(--text-muted);
+  border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer;transition:all .15s ease;
+  user-select:none;
+}
+.pill:hover{border-color:var(--text-faint);}
+.pill.active{background:var(--sage-soft);border-color:var(--sage);color:var(--sage);font-weight:600;}
+.pill.active.danger{background:var(--rust-soft);border-color:var(--rust);color:var(--rust);}
+
+select,.text-input,.textarea-input{
+  width:100%;background:var(--bg-soft);border:1px solid var(--border-strong);
+  color:var(--text);border-radius:9px;padding:11px 13px;font-size:14px;
+}
+.textarea-input{resize:vertical;min-height:72px;}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23a39c8d' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:34px;}
+
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+@media (max-width:560px){.row-2,.row-3{grid-template-columns:1fr;}}
+
+.chip-field{border:1px solid var(--border-strong);background:var(--bg-soft);border-radius:9px;padding:10px;}
+.chip-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:7px;}
+.chip-list:empty{margin-bottom:0;}
+.chip{
+  background:var(--amber-soft);color:var(--amber-strong);border:1px solid rgba(232,163,61,0.35);
+  border-radius:999px;padding:5px 8px 5px 12px;font-size:12.5px;display:flex;align-items:center;gap:6px;
+}
+.chip button{background:none;border:none;color:inherit;font-size:14px;line-height:1;opacity:0.7;padding:0 2px;}
+.chip button:hover{opacity:1;}
+.chip-field input{width:100%;background:none;border:none;color:var(--text);font-size:13.5px;padding:4px 2px;outline:none;}
+
+.day-row{display:flex;gap:8px;flex-wrap:wrap;}
+.day-toggle{
+  flex:1;min-width:78px;border:1px solid var(--border-strong);background:var(--bg-soft);
+  border-radius:10px;padding:12px 6px;text-align:center;cursor:pointer;transition:all .15s ease;
+}
+.day-toggle .dname{display:block;font-weight:700;font-size:12.5px;letter-spacing:0.02em;}
+.day-toggle .dstate{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em;margin-top:5px;color:var(--text-faint);}
+.day-toggle.free{border-color:var(--sage);background:var(--sage-soft);}
+.day-toggle.free .dstate{color:var(--sage);}
+.day-toggle.busy{border-color:rgba(207,98,67,0.4);background:var(--rust-soft);}
+.day-toggle.busy .dstate{color:var(--rust);}
+
+.key-input-wrap{display:flex;gap:8px;}
+.key-input-wrap .text-input{flex:1;}
+.icon-btn{
+  background:var(--bg-soft);border:1px solid var(--border-strong);color:var(--text-muted);
+  border-radius:9px;padding:0 14px;font-size:12.5px;font-weight:600;white-space:nowrap;
+}
+.icon-btn:hover{color:var(--text);border-color:var(--text-faint);}
+
+.checkbox-row{display:flex;align-items:center;gap:9px;margin-top:6px;}
+.checkbox-row input{width:16px;height:16px;accent-color:var(--amber);}
+.checkbox-row label{font-size:13px;color:var(--text-muted);}
+
+.provider-link{font-size:12px;color:var(--text-faint);margin-top:8px;}
+
+.wizard-nav{display:flex;justify-content:space-between;align-items:center;margin-top:30px;border-top:1px solid var(--border);padding-top:22px;}
+.btn{
+  border-radius:10px;padding:12px 22px;font-size:14px;font-weight:600;border:1px solid transparent;
+  transition:all .15s ease;
+}
+.btn-primary{background:var(--amber);color:#1a1408;}
+.btn-primary:hover{background:var(--amber-strong);}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-ghost{background:none;border:1px solid var(--border-strong);color:var(--text-muted);}
+.btn-ghost:hover{color:var(--text);border-color:var(--text-faint);}
+.btn-text{background:none;border:none;color:var(--text-faint);font-size:13px;padding:8px;}
+.btn-text:hover{color:var(--text);}
+
+.error-banner{
+  background:var(--rust-soft);border:1px solid rgba(207,98,67,0.4);color:#f3c2b1;
+  border-radius:10px;padding:14px 16px;font-size:13.5px;margin-top:18px;display:none;
+}
+.error-banner.show{display:block;}
+.error-banner strong{display:block;margin-bottom:3px;color:#fff;}
+
+/* loading overlay */
+.loading-screen{
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 20px;text-align:center;
+}
+.loading-screen.show{display:flex;}
+.loading-ring{
+  width:54px;height:54px;border-radius:50%;border:3px solid var(--border-strong);
+  border-top-color:var(--amber);animation:spin 0.9s linear infinite;margin-bottom:22px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-msg{font-family:'Fraunces',serif;font-style:italic;font-size:17px;color:var(--text-muted);}
+
+/* ============ DASHBOARD ============ */
+.dashboard{display:none;}
+.dashboard.show{display:block;}
+
+.tab-rail{display:flex;gap:6px;margin-bottom:26px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.tab-btn{
+  background:var(--card);border:1px solid var(--border);border-bottom:none;color:var(--text-faint);
+  padding:12px 20px 11px;border-radius:10px 10px 0 0;font-size:13.5px;font-weight:600;
+  position:relative;top:1px;transition:all .15s ease;
+}
+.tab-btn:hover{color:var(--text-muted);}
+.tab-btn.active{background:var(--bg);border-color:var(--border-strong);border-bottom:2px solid var(--bg);color:var(--amber-strong);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+.section-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.section-head h2{font-size:21px;}
+.section-head p{color:var(--text-muted);font-size:13.5px;margin-top:4px;max-width:520px;}
+.head-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+/* overview */
+.chef-note{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 26px;margin-bottom:22px;position:relative;
+}
+.chef-note::before{content:'“';position:absolute;top:6px;left:14px;font-family:'Fraunces',serif;font-size:48px;color:var(--amber-soft);}
+.chef-note p{font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--text);padding-left:18px;line-height:1.55;}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.stat-card .sv{font-family:'Fraunces',serif;font-size:24px;color:var(--amber-strong);}
+.stat-card .sl{font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;}
+
+.profile-recap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;}
+.recap-row{display:flex;gap:16px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+.recap-row:last-child{border-bottom:none;}
+.recap-row .rl{color:var(--text-faint);min-width:140px;flex-shrink:0;}
+.recap-row .rv{color:var(--text-muted);}
+.tag-mini{display:inline-block;background:var(--bg-soft);border:1px solid var(--border-strong);border-radius:999px;padding:2px 9px;font-size:11.5px;margin:2px 3px 2px 0;color:var(--text-muted);}
+
+/* meal plan calendar */
+.calendar-scroll{overflow-x:auto;padding-bottom:6px;}
+.calendar{display:grid;grid-template-columns:90px repeat(7,minmax(165px,1fr));gap:8px;min-width:760px;}
+.cal-corner{}
+.cal-daycol-head{
+  background:var(--card);border:1px solid var(--border);border-radius:10px 10px 0 0;
+  padding:10px 6px;text-align:center;
+}
+.cal-daycol-head .dn{font-weight:700;font-size:13px;}
+.cal-daycol-head .db{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px;display:inline-block;padding:1px 8px;border-radius:999px;}
+.cal-daycol-head .db.free{background:var(--sage-soft);color:var(--sage);}
+.cal-daycol-head .db.busy{background:var(--rust-soft);color:var(--rust);}
+.cal-slot-label{
+  display:flex;align-items:center;justify-content:flex-end;padding:8px 10px;
+  font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.04em;
+}
+.meal-cell{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;
+  cursor:pointer;transition:all .15s ease;
+}
+.meal-cell:hover{border-color:var(--border-strong);background:var(--card-alt);}
+.meal-cell .mn{font-weight:600;font-size:13px;line-height:1.3;}
+.meal-cell .md{font-size:11.5px;color:var(--text-faint);margin-top:5px;line-height:1.4;display:block;}
+.meal-cell .mmeta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.meal-cell .mbadge{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-soft);color:var(--text-muted);padding:2px 6px;border-radius:5px;}
+.meal-cell.expanded{border-color:var(--amber);}
+.meal-cell .full-desc{display:none;font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.5;border-top:1px solid var(--border);padding-top:8px;}
+.meal-cell.expanded .full-desc{display:block;}
+.meal-cell.leftover{border-left:3px solid var(--sage);}
+
+/* grocery list */
+.grocery-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:14px;flex-wrap:wrap;}
+.progress-pill{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--text-muted);}
+.progress-track{width:130px;height:6px;background:var(--bg-soft);border-radius:999px;overflow:hidden;border:1px solid var(--border-strong);}
+.progress-fill{height:100%;background:var(--sage);transition:width .25s ease;}
+.grocery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.grocery-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 18px 8px;}
+.grocery-card h3{font-size:14.5px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:baseline;}
+.grocery-card h3 .cnt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-faint);font-weight:400;}
+.grocery-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.grocery-item:last-child{border-bottom:none;}
+.grocery-item input{margin-top:2px;width:16px;height:16px;accent-color:var(--sage);flex-shrink:0;}
+.grocery-item label{font-size:13.5px;flex:1;cursor:pointer;}
+.grocery-item .qty{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text-faint);}
+.grocery-item.checked label{color:var(--text-faint);text-decoration:line-through;}
+
+/* prep timeline */
+.timeline{position:relative;padding-left:28px;}
+.timeline::before{content:'';position:absolute;left:8px;top:6px;bottom:6px;width:1px;background:var(--border-strong);}
+.tl-item{position:relative;margin-bottom:22px;}
+.tl-item .dot{position:absolute;left:-28px;top:4px;width:17px;height:17px;border-radius:50%;background:var(--bg);border:2px solid var(--amber);}
+.tl-item.busy-day .dot{border-color:var(--rust);}
+.tl-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;}
+.tl-head{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.tl-head h4{font-size:15.5px;}
+.tl-head .db{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;padding:2px 9px;border-radius:999px;}
+.tl-head .db.free{background:var(--sage-soft);color:var(--sage);}
+.tl-head .db.busy{background:var(--rust-soft);color:var(--rust);}
+.tl-card ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--text-muted);line-height:1.7;}
+
+.tips-card{background:var(--card);border:1px dashed var(--border-strong);border-radius:var(--radius);padding:18px 22px;margin-top:22px;}
+.tips-card h4{font-size:13.5px;color:var(--amber-strong);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;}
+.tips-card ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--text-muted);line-height:1.7;}
+
+.empty-note{color:var(--text-faint);font-size:13.5px;font-style:italic;}
+
+footer.hint{text-align:center;color:var(--text-faint);font-size:12px;margin-top:50px;}
+
+/* ===== PRINT ===== */
+#printArea{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  #printArea, #printArea *{visibility:visible;}
+  #printArea{display:block;position:absolute;top:0;left:0;width:100%;padding:20px;color:#000;background:#fff;}
+  #printArea h1{font-size:20px;margin-bottom:4px;}
+  #printArea .pcat{margin-top:16px;font-weight:700;font-size:13px;text-transform:uppercase;border-bottom:1px solid #999;padding-bottom:4px;}
+  #printArea .pitem{font-size:13px;padding:3px 0;}
+}
+
+@media (max-width:680px){
+  .wizard-card{padding:24px 18px;}
+  .row-2,.row-3{grid-template-columns:1fr;}
+  .calendar{grid-template-columns:70px repeat(7,minmax(150px,1fr));}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <div class="brandbar">
+    <div class="brand">
+      <span class="mark">✦</span>
+      <span class="name">The Weekly Plate</span>
+      <span class="tag">meal prep, planned around your life</span>
+    </div>
+    <button class="start-over-link" id="startOverBtn" style="display:none;">Start over</button>
+  </div>
+
+  <!-- ============ WIZARD ============ -->
+  <div id="wizardView" class="wizard-wrap">
+
+    <div class="stepper" id="stepper"></div>
+
+    <div class="wizard-card">
+
+      <!-- STEP 1 -->
+      <section class="wiz-step" data-step="1">
+        <div class="chapter-eyebrow">Chapter <span class="numeral">I</span></div>
+        <h2 class="chapter-title">Your diet & goals</h2>
+        <p class="chapter-sub">Tell us how you eat and what you're working toward — this shapes every recipe we suggest.</p>
+
+        <div class="field-group">
+          <label class="field-label">How do you eat?</label>
+          <div class="card-grid" id="dietGrid"></div>
+          <div id="dietOtherWrap" style="display:none;margin-top:10px;">
+            <input type="text" class="text-input" id="dietOtherInput" placeholder="Describe your way of eating">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">What's your main goal right now?</label>
+          <div class="card-grid" id="goalGrid"></div>
+        </div>
+
+        <div class="row-2">
+          <div class="field-group">
+            <label class="field-label">Activity level</label>
+            <select id="activitySelect">
+              <option value="sedentary">Sedentary (desk job, little exercise)</option>
+              <option value="light">Lightly active (1–2 workouts/week)</option>
+              <option value="moderate" selected>Moderately active (3–4 workouts/week)</option>
+              <option value="active">Very active (5+ workouts/week or physical job)</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Daily calorie target <span style="color:var(--text-faint);font-weight:400;">(optional)</span></label>
+            <input type="number" class="text-input" id="calorieInput" placeholder="Let the planner decide" min="800" max="6000">
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 2 -->
+      <section class="wiz-step" data-step="2">
+        <div class="chapter-eyebrow">Chapter <span class="numeral">II</span></div>
+        <h2 class="chapter-title">Allergies & restrictions</h2>
+        <p class="chapter-sub">We take these seriously — anything selected here will never appear in your plan.</p>
+
+        <div class="field-group">
+          <label class="field-label">Allergies & intolerances</label>
+          <div class="pill-grid" id="allergyGrid"></div>
+          <input type="text" class="text-input" id="allergyOtherInput" placeholder="Anything else? e.g. mango, kiwi, sulfites" style="margin-top:12px;">
+          <span class="field-hint">Separate multiple items with commas.</span>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Medical / lifestyle restrictions</label>
+          <div class="pill-grid" id="medicalGrid"></div>
+        </div>
+      </section>
+
+      <!-- STEP 3 -->
+      <section class="wiz-step" data-step="3">
+        <div class="chapter-eyebrow">Chapter <span class="numeral">III</span></div>
+        <h2 class="chapter-title">Tastes & preferences</h2>
+        <p class="chapter-sub">Not an allergy, just not for you — tell us what to leave out, and what you actually enjoy.</p>
+
+        <div class="field-group">
+          <label class="field-label">Foods you dislike or want to avoid</label>
+          <div class="chip-field" id="dislikesField">
+            <div class="chip-list" id="dislikesChips"></div>
+            <input type="text" id="dislikesInput" placeholder="Type a food and press Enter — e.g. cilantro, mushrooms, chocolate">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Cuisines you enjoy <span style="color:var(--text-faint);font-weight:400;">(pick a few, optional)</span></label>
+          <div class="pill-grid" id="cuisineGrid"></div>
+          <div class="chip-field" style="margin-top:10px;">
+            <div class="chip-list" id="cuisineCustomChips"></div>
+            <input type="text" id="cuisineCustomInput" placeholder="Other cuisine — press Enter to add">
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div class="field-group">
+            <label class="field-label">Spice tolerance</label>
+            <div class="pill-grid" id="spiceGrid"></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Servings per meal</label>
+            <input type="number" class="text-input" id="servingsInput" value="1" min="1" max="10">
+            <span class="field-hint">Cooking for yourself, your partner, family?</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Which meals do you want planned?</label>
+          <div class="pill-grid" id="mealsGrid"></div>
+        </div>
+      </section>
+
+      <!-- STEP 4 -->
+      <section class="wiz-step" data-step="4">
+        <div class="chapter-eyebrow">Chapter <span class="numeral">IV</span></div>
+        <h2 class="chapter-title">Your week</h2>
+        <p class="chapter-sub">Mark which days are busy and which are free — we'll batch-cook on your free days so busy days need almost no effort.</p>
+
+        <div class="field-group">
+          <label class="field-label">Tap a day to mark it busy or free</label>
+          <div class="day-row" id="dayRow"></div>
+        </div>
+
+        <div class="row-2">
+          <div class="field-group">
+            <label class="field-label">Max cook time on busy days</label>
+            <select id="busyTimeSelect">
+              <option value="10">10 minutes</option>
+              <option value="15" selected>15 minutes</option>
+              <option value="20">20 minutes</option>
+              <option value="30">30 minutes</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Max cook time on free days</label>
+            <select id="freeTimeSelect">
+              <option value="30">30 minutes</option>
+              <option value="45" selected>45 minutes</option>
+              <option value="60">60 minutes</option>
+              <option value="90">90+ minutes</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Kitchen equipment you have</label>
+          <div class="pill-grid" id="equipGrid"></div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Batch cooking</label>
+          <div class="pill-grid" id="batchGrid"></div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Anything else the chef should know? <span style="color:var(--text-faint);font-weight:400;">(optional)</span></label>
+          <textarea class="textarea-input" id="notesInput" placeholder="e.g. I meal prep lunches for work, I travel Thursdays, I'm training for a half-marathon..."></textarea>
+        </div>
+      </section>
+
+      <!-- STEP 5 -->
+      <section class="wiz-step" data-step="5">
+        <div class="chapter-eyebrow">Chapter <span class="numeral">V</span></div>
+        <h2 class="chapter-title">Connect the kitchen</h2>
+        <p class="chapter-sub">Your plan is generated by an AI model using your own free API key. The key stays in your browser — it's never sent anywhere but the provider you choose.</p>
+
+        <div class="row-2">
+          <div class="field-group">
+            <label class="field-label">Provider</label>
+            <select id="providerSelect">
+              <option value="gemini">Google Gemini</option>
+              <option value="groq">Groq</option>
+            </select>
+            <div class="provider-link" id="providerLink"></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Model</label>
+            <select id="modelSelect"></select>
+            <div id="customModelWrap" style="display:none;margin-top:8px;">
+              <input type="text" class="text-input" id="customModelInput" placeholder="Exact model id">
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">API key</label>
+          <div class="key-input-wrap">
+            <input type="password" class="text-input" id="apiKeyInput" placeholder="Paste your API key">
+            <button class="icon-btn" id="toggleKeyBtn" type="button">Show</button>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="saveKeyCheckbox" checked>
+            <label for="saveKeyCheckbox">Remember my key & answers on this device (saved only in this browser's local storage)</label>
+          </div>
+        </div>
+
+        <div class="error-banner" id="generateError">
+          <strong>Couldn't generate your plan</strong>
+          <span id="generateErrorMsg"></span>
+        </div>
+      </section>
+
+      <!-- LOADING -->
+      <div class="loading-screen" id="loadingScreen">
+        <div class="loading-ring"></div>
+        <div class="loading-msg" id="loadingMsg">Reading your preferences…</div>
+      </div>
+
+      <div class="wizard-nav" id="wizardNav">
+        <button class="btn btn-ghost" id="backBtn">Back</button>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-text" id="cancelEditBtn" style="display:none;">Cancel</button>
+          <button class="btn btn-primary" id="nextBtn">Continue</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ DASHBOARD ============ -->
+  <div class="dashboard" id="dashboardView">
+
+    <div class="tab-rail" id="tabRail"></div>
+
+    <!-- OVERVIEW -->
+    <div class="tab-panel" id="panel-overview">
+      <div class="section-head">
+        <div>
+          <h2>Overview</h2>
+          <p>Your profile, at a glance — edit it any time and regenerate a fresh plan.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-ghost" id="editProfileBtn">Edit profile</button>
+          <button class="btn btn-primary" id="regenerateBtn">Regenerate plan</button>
+        </div>
+      </div>
+
+      <div class="chef-note"><p id="chefNoteText">Generating your plan…</p></div>
+
+      <div class="stat-grid" id="statGrid"></div>
+
+      <div class="profile-recap" id="profileRecap"></div>
+    </div>
+
+    <!-- MEAL PLAN -->
+    <div class="tab-panel" id="panel-mealplan">
+      <div class="section-head">
+        <div>
+          <h2>Meal plan</h2>
+          <p>Tap any meal to see the full description. Days marked <strong style="color:var(--sage);">free</strong> get more involved cooking; <strong style="color:var(--rust);">busy</strong> days lean on leftovers and quick assembly.</p>
+        </div>
+      </div>
+      <div class="calendar-scroll">
+        <div class="calendar" id="calendarGrid"></div>
+      </div>
+    </div>
+
+    <!-- GROCERY LIST -->
+    <div class="tab-panel" id="panel-grocery">
+      <div class="section-head">
+        <div>
+          <h2>Grocery list</h2>
+          <p>Everything consolidated and grouped by aisle. Check items off as you shop.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-ghost" id="printGroceryBtn">Print</button>
+          <button class="btn btn-ghost" id="downloadGroceryBtn">Download .txt</button>
+        </div>
+      </div>
+      <div class="grocery-toolbar">
+        <div class="progress-pill">
+          <span id="groceryProgressLabel">0 of 0 checked</span>
+          <div class="progress-track"><div class="progress-fill" id="groceryProgressFill" style="width:0%;"></div></div>
+        </div>
+        <button class="btn btn-text" id="resetGroceryBtn">Uncheck all</button>
+      </div>
+      <div class="grocery-grid" id="groceryGrid"></div>
+    </div>
+
+    <!-- PREP TIMELINE -->
+    <div class="tab-panel" id="panel-prep">
+      <div class="section-head">
+        <div>
+          <h2>Prep timeline</h2>
+          <p>What to batch-cook, and when, so your busy days take care of themselves.</p>
+        </div>
+      </div>
+      <div class="timeline" id="prepTimeline"></div>
+      <div class="tips-card" id="tipsCard" style="display:none;">
+        <h4>Chef's tips</h4>
+        <ul id="tipsList"></ul>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="hint">Your data and API key stay in this browser. Nothing is sent anywhere except the AI provider you chose, to generate your plan.</footer>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+/* =========================================================
+   DATA
+========================================================= */
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const STEP_LABELS = ['Diet & Goals','Allergies','Tastes','Your Week','Connect Kitchen'];
+const STEP_NUMERALS = ['I','II','III','IV','V'];
+
+const DIET_OPTIONS = [
+  {v:'omnivore', t:'Omnivore', d:'Eats everything'},
+  {v:'vegetarian', t:'Vegetarian', d:'No meat or fish'},
+  {v:'vegan', t:'Vegan', d:'No animal products'},
+  {v:'pescatarian', t:'Pescatarian', d:'Fish, no other meat'},
+  {v:'keto', t:'Keto / low-carb', d:'Very low carb'},
+  {v:'mediterranean', t:'Mediterranean', d:'Plant-forward, fish, olive oil'},
+  {v:'other', t:'Other', d:'Describe it yourself'},
+];
+const GOAL_OPTIONS = [
+  {v:'lose', t:'Lose weight', d:'Calorie deficit'},
+  {v:'maintain', t:'Maintain weight', d:'Stay where I am'},
+  {v:'gain', t:'Build muscle / bulk', d:'Calorie surplus, high protein'},
+  {v:'health', t:'General health', d:'Balanced, sustainable'},
+  {v:'performance', t:'Athletic performance', d:'Fuel for training'},
+];
+const ALLERGY_OPTIONS = ['Peanuts','Tree nuts','Dairy','Gluten / wheat','Shellfish','Eggs','Soy','Fish','Sesame','Nightshades','Corn'];
+const MEDICAL_OPTIONS = ['Low sodium','Low sugar / diabetic-friendly','Low FODMAP','High protein focus','Low carb'];
+const CUISINE_OPTIONS = ['Indian','Italian','Mexican','Thai','Chinese','Mediterranean','American','Japanese','Middle Eastern','Korean','French','Caribbean'];
+const SPICE_OPTIONS = [{v:'mild',t:'Mild'},{v:'medium',t:'Medium'},{v:'hot',t:'Spicy'}];
+const MEAL_OPTIONS = [{v:'breakfast',t:'Breakfast'},{v:'lunch',t:'Lunch'},{v:'dinner',t:'Dinner'},{v:'snack',t:'Snack'}];
+const EQUIP_OPTIONS = ['Stove & oven','Microwave','Slow cooker','Instant Pot / pressure cooker','Air fryer','Blender / food processor','Grill'];
+const BATCH_OPTIONS = [{v:'yes',t:'Yes — batch cook on free days'},{v:'no',t:'No — I prefer cooking fresh daily'}];
+
+const MODEL_OPTIONS = {
+  gemini: [
+    {v:'gemini-flash-latest', t:'Gemini Flash (latest, recommended)'},
+    {v:'gemini-2.5-flash', t:'Gemini 2.5 Flash'},
+    {v:'gemini-flash-lite-latest', t:'Gemini Flash-Lite (fastest)'},
+    {v:'__custom__', t:'Custom model id…'},
+  ],
+  groq: [
+    {v:'openai/gpt-oss-120b', t:'GPT-OSS 120B (recommended)'},
+    {v:'openai/gpt-oss-20b', t:'GPT-OSS 20B (fastest)'},
+    {v:'moonshotai/kimi-k2-instruct', t:'Kimi K2 Instruct'},
+    {v:'qwen/qwen3.6-27b', t:'Qwen 3.6 27B'},
+    {v:'__custom__', t:'Custom model id…'},
+  ]
+};
+const PROVIDER_LINKS = {
+  gemini: 'Free key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.',
+  groq: 'Free key from <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq Console</a>.'
+};
+
+const LOADING_MESSAGES = [
+  'Reading your preferences…',
+  'Raiding the pantry…',
+  'Balancing macros…',
+  'Matching recipes to your free days…',
+  'Consolidating the grocery list…',
+  'Writing your prep schedule…',
+  'Plating it up…'
+];
+
+/* =========================================================
+   STATE
+========================================================= */
+function defaultProfile(){
+  const schedule = {};
+  DAYS.forEach(d => schedule[d] = (d==='Saturday'||d==='Sunday'||d==='Monday') ? 'free' : 'busy');
+  return {
+    diet:'omnivore', dietOther:'',
+    goal:'maintain', activity:'moderate', calorieTarget:'',
+    allergies:[], allergyOther:'', medical:[],
+    dislikes:[], cuisines:[], cuisineCustom:[], spice:'medium',
+    meals:{breakfast:true,lunch:true,dinner:true,snack:false},
+    servings:1,
+    schedule, busyTime:'15', freeTime:'45',
+    equipment:['Stove & oven'], batchPref:'yes',
+    notes:''
+  };
+}
+
+let profile = defaultProfile();
+let apiConfig = {provider:'gemini', model:'gemini-flash-latest', customModel:'', key:'', save:true};
+let plan = null;
+let groceryChecked = {};
+let currentStep = 1;
+let isEditing = false;
+
+/* =========================================================
+   STORAGE
+========================================================= */
+function loadStorage(){
+  try{
+    const p = localStorage.getItem('mpo_profile');
+    if(p) profile = Object.assign(defaultProfile(), JSON.parse(p));
+    const a = localStorage.getItem('mpo_api');
+    if(a) apiConfig = Object.assign(apiConfig, JSON.parse(a));
+    const pl = localStorage.getItem('mpo_plan');
+    if(pl) plan = JSON.parse(pl);
+    const gc = localStorage.getItem('mpo_grocery_checked');
+    if(gc) groceryChecked = JSON.parse(gc);
+  }catch(e){ console.warn('Storage load failed', e); }
+}
+function saveProfileAndApi(){
+  if(apiConfig.save){
+    localStorage.setItem('mpo_profile', JSON.stringify(profile));
+    localStorage.setItem('mpo_api', JSON.stringify(apiConfig));
+  } else {
+    localStorage.removeItem('mpo_profile');
+    localStorage.removeItem('mpo_api');
+  }
+}
+function savePlan(){ localStorage.setItem('mpo_plan', JSON.stringify(plan)); }
+function saveGroceryChecked(){ localStorage.setItem('mpo_grocery_checked', JSON.stringify(groceryChecked)); }
+function clearAllStorage(){
+  localStorage.removeItem('mpo_profile');
+  localStorage.removeItem('mpo_api');
+  localStorage.removeItem('mpo_plan');
+  localStorage.removeItem('mpo_grocery_checked');
+}
+
+/* =========================================================
+   GENERIC UI HELPERS
+========================================================= */
+function el(tag, cls, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; }
+
+function renderCardGrid(container, options, currentVal, onPick){
+  container.innerHTML='';
+  options.forEach(opt=>{
+    const card = el('label','choice-card'+(opt.v===currentVal?' checked':''));
+    card.innerHTML = `<input type="radio" name="${container.id}"><span class="ct">${opt.t}</span><span class="cd">${opt.d}</span>`;
+    card.addEventListener('click', ()=>{ onPick(opt.v); });
+    container.appendChild(card);
+  });
+}
+function renderPillGroup(container, options, isActive, onToggle, danger){
+  container.innerHTML='';
+  options.forEach(opt=>{
+    const v = typeof opt==='string' ? opt : opt.v;
+    const t = typeof opt==='string' ? opt : opt.t;
+    const pill = el('button','pill'+(isActive(v)?' active'+(danger?' danger':''):''), t);
+    pill.type='button';
+    pill.addEventListener('click', ()=>{ onToggle(v); });
+    container.appendChild(pill);
+  });
+}
+function renderChips(container, items, onRemove){
+  container.innerHTML='';
+  items.forEach((item,i)=>{
+    const chip = el('span','chip');
+    chip.innerHTML = `<span>${escapeHtml(item)}</span>`;
+    const rm = el('button','','×'); rm.type='button';
+    rm.addEventListener('click', ()=> onRemove(i));
+    chip.appendChild(rm);
+    container.appendChild(chip);
+  });
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function setupChipInput(inputEl, chipsContainer, arrRef, onChange){
+  inputEl.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const val = inputEl.value.trim();
+      if(val){
+        val.split(',').map(s=>s.trim()).filter(Boolean).forEach(v=>{ if(!arrRef.includes(v)) arrRef.push(v); });
+        inputEl.value='';
+        onChange && onChange();
+      }
+    }
+  });
+}
+
+/* =========================================================
+   WIZARD: STEP RENDERING
+========================================================= */
+function renderStepper(){
+  const wrap = document.getElementById('stepper');
+  wrap.innerHTML='';
+  for(let i=1;i<=5;i++){
+    const node = el('div','step-node'+(i<currentStep?' done':'')+(i===currentStep?' current':'')+(i<currentStep?' clickable':''));
+    node.innerHTML = `<div class="dot">${i<currentStep?'✓':STEP_NUMERALS[i-1]}</div><div class="label">${STEP_LABELS[i-1]}</div>`;
+    if(i<currentStep) node.addEventListener('click', ()=> goToStep(i));
+    wrap.appendChild(node);
+  }
+}
+function goToStep(n){
+  currentStep = n;
+  document.querySelectorAll('.wiz-step').forEach(s=> s.style.display = (parseInt(s.dataset.step)===n) ? 'block':'none');
+  document.getElementById('backBtn').style.display = n===1 ? 'none':'inline-block';
+  document.getElementById('nextBtn').textContent = n===5 ? 'Generate my plan' : 'Continue';
+  document.getElementById('generateError').classList.remove('show');
+  renderStepper();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function populateWizardFields(){
+  renderCardGrid(document.getElementById('dietGrid'), DIET_OPTIONS, profile.diet, v=>{ profile.diet=v; document.getElementById('dietOtherWrap').style.display = v==='other'?'block':'none'; populateWizardFields(); });
+  document.getElementById('dietOtherWrap').style.display = profile.diet==='other' ? 'block':'none';
+  document.getElementById('dietOtherInput').value = profile.dietOther;
+
+  renderCardGrid(document.getElementById('goalGrid'), GOAL_OPTIONS, profile.goal, v=>{ profile.goal=v; populateWizardFields(); });
+  document.getElementById('activitySelect').value = profile.activity;
+  document.getElementById('calorieInput').value = profile.calorieTarget;
+
+  renderPillGroup(document.getElementById('allergyGrid'), ALLERGY_OPTIONS, v=>profile.allergies.includes(v), v=>{
+    profile.allergies = profile.allergies.includes(v) ? profile.allergies.filter(x=>x!==v) : [...profile.allergies, v];
+    populateWizardFields();
+  }, true);
+  document.getElementById('allergyOtherInput').value = profile.allergyOther;
+  renderPillGroup(document.getElementById('medicalGrid'), MEDICAL_OPTIONS, v=>profile.medical.includes(v), v=>{
+    profile.medical = profile.medical.includes(v) ? profile.medical.filter(x=>x!==v) : [...profile.medical, v];
+    populateWizardFields();
+  });
+
+  renderChips(document.getElementById('dislikesChips'), profile.dislikes, i=>{ profile.dislikes.splice(i,1); populateWizardFields(); });
+  renderPillGroup(document.getElementById('cuisineGrid'), CUISINE_OPTIONS, v=>profile.cuisines.includes(v), v=>{
+    profile.cuisines = profile.cuisines.includes(v) ? profile.cuisines.filter(x=>x!==v) : [...profile.cuisines, v];
+    populateWizardFields();
+  });
+  renderChips(document.getElementById('cuisineCustomChips'), profile.cuisineCustom, i=>{ profile.cuisineCustom.splice(i,1); populateWizardFields(); });
+  renderPillGroup(document.getElementById('spiceGrid'), SPICE_OPTIONS, v=>profile.spice===v, v=>{ profile.spice=v; populateWizardFields(); });
+  document.getElementById('servingsInput').value = profile.servings;
+  renderPillGroup(document.getElementById('mealsGrid'), MEAL_OPTIONS, v=>!!profile.meals[v], v=>{
+    profile.meals[v] = !profile.meals[v]; populateWizardFields();
+  });
+
+  renderDayRow();
+  document.getElementById('busyTimeSelect').value = profile.busyTime;
+  document.getElementById('freeTimeSelect').value = profile.freeTime;
+  renderPillGroup(document.getElementById('equipGrid'), EQUIP_OPTIONS, v=>profile.equipment.includes(v), v=>{
+    profile.equipment = profile.equipment.includes(v) ? profile.equipment.filter(x=>x!==v) : [...profile.equipment, v];
+    populateWizardFields();
+  });
+  renderPillGroup(document.getElementById('batchGrid'), BATCH_OPTIONS, v=>profile.batchPref===v, v=>{ profile.batchPref=v; populateWizardFields(); });
+  document.getElementById('notesInput').value = profile.notes;
+
+  document.getElementById('providerSelect').value = apiConfig.provider;
+  populateModelSelect();
+  document.getElementById('apiKeyInput').value = apiConfig.key;
+  document.getElementById('saveKeyCheckbox').checked = apiConfig.save;
+  document.getElementById('providerLink').innerHTML = PROVIDER_LINKS[apiConfig.provider];
+}
+
+function renderDayRow(){
+  const wrap = document.getElementById('dayRow');
+  wrap.innerHTML='';
+  DAYS.forEach(day=>{
+    const state = profile.schedule[day];
+    const btn = el('div','day-toggle '+state);
+    btn.innerHTML = `<span class="dname">${day.slice(0,3)}</span><span class="dstate">${state}</span>`;
+    btn.addEventListener('click', ()=>{
+      profile.schedule[day] = state==='busy' ? 'free' : 'busy';
+      renderDayRow();
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function populateModelSelect(){
+  const sel = document.getElementById('modelSelect');
+  const opts = MODEL_OPTIONS[apiConfig.provider];
+  sel.innerHTML = opts.map(o=>`<option value="${o.v}">${o.t}</option>`).join('');
+  const known = opts.some(o=>o.v===apiConfig.model);
+  sel.value = known ? apiConfig.model : '__custom__';
+  const customWrap = document.getElementById('customModelWrap');
+  customWrap.style.display = sel.value==='__custom__' ? 'block':'none';
+  document.getElementById('customModelInput').value = known ? '' : (apiConfig.model||apiConfig.customModel||'');
+}
+
+/* wire up static inputs once */
+function wireStaticInputs(){
+  document.getElementById('dietOtherInput').addEventListener('input', e=> profile.dietOther = e.target.value);
+  document.getElementById('activitySelect').addEventListener('change', e=> profile.activity = e.target.value);
+  document.getElementById('calorieInput').addEventListener('input', e=> profile.calorieTarget = e.target.value);
+  document.getElementById('allergyOtherInput').addEventListener('input', e=> profile.allergyOther = e.target.value);
+  document.getElementById('servingsInput').addEventListener('input', e=> profile.servings = parseInt(e.target.value)||1);
+  document.getElementById('busyTimeSelect').addEventListener('change', e=> profile.busyTime = e.target.value);
+  document.getElementById('freeTimeSelect').addEventListener('change', e=> profile.freeTime = e.target.value);
+  document.getElementById('notesInput').addEventListener('input', e=> profile.notes = e.target.value);
+
+  setupChipInput(document.getElementById('dislikesInput'), document.getElementById('dislikesChips'), profile.dislikes, ()=> renderChips(document.getElementById('dislikesChips'), profile.dislikes, i=>{ profile.dislikes.splice(i,1); populateWizardFields(); }));
+  setupChipInput(document.getElementById('cuisineCustomInput'), document.getElementById('cuisineCustomChips'), profile.cuisineCustom, ()=> renderChips(document.getElementById('cuisineCustomChips'), profile.cuisineCustom, i=>{ profile.cuisineCustom.splice(i,1); populateWizardFields(); }));
+
+  document.getElementById('providerSelect').addEventListener('change', e=>{
+    apiConfig.provider = e.target.value;
+    apiConfig.model = MODEL_OPTIONS[apiConfig.provider][0].v;
+    document.getElementById('providerLink').innerHTML = PROVIDER_LINKS[apiConfig.provider];
+    populateModelSelect();
+  });
+  document.getElementById('modelSelect').addEventListener('change', e=>{
+    document.getElementById('customModelWrap').style.display = e.target.value==='__custom__' ? 'block':'none';
+  });
+  document.getElementById('customModelInput').addEventListener('input', e=> apiConfig.customModel = e.target.value);
+  document.getElementById('apiKeyInput').addEventListener('input', e=> apiConfig.key = e.target.value);
+  document.getElementById('saveKeyCheckbox').addEventListener('change', e=> apiConfig.save = e.target.checked);
+  document.getElementById('toggleKeyBtn').addEventListener('click', ()=>{
+    const inp = document.getElementById('apiKeyInput');
+    const showing = inp.type==='text';
+    inp.type = showing ? 'password':'text';
+    document.getElementById('toggleKeyBtn').textContent = showing ? 'Show':'Hide';
+  });
+
+  document.getElementById('backBtn').addEventListener('click', ()=>{ if(currentStep>1) goToStep(currentStep-1); });
+  document.getElementById('nextBtn').addEventListener('click', onNextClicked);
+  document.getElementById('cancelEditBtn').addEventListener('click', ()=>{
+    if(plan){ showDashboard(); }
+  });
+  document.getElementById('editProfileBtn').addEventListener('click', startEdit);
+  document.getElementById('regenerateBtn').addEventListener('click', ()=> generatePlan());
+  document.getElementById('startOverBtn').addEventListener('click', ()=>{
+    if(confirm('This clears your saved profile, key, and plan from this browser. Continue?')){
+      clearAllStorage();
+      profile = defaultProfile();
+      apiConfig = {provider:'gemini', model:'gemini-flash-latest', customModel:'', key:'', save:true};
+      plan = null; groceryChecked = {};
+      isEditing = false;
+      document.getElementById('cancelEditBtn').style.display='none';
+      document.getElementById('startOverBtn').style.display='none';
+      showWizard();
+      goToStep(1);
+      populateWizardFields();
+    }
+  });
+  document.getElementById('printGroceryBtn').addEventListener('click', printGroceryList);
+  document.getElementById('downloadGroceryBtn').addEventListener('click', downloadGroceryList);
+  document.getElementById('resetGroceryBtn').addEventListener('click', ()=>{
+    groceryChecked = {}; saveGroceryChecked(); renderGroceryList();
+  });
+}
+
+function startEdit(){
+  isEditing = true;
+  document.getElementById('cancelEditBtn').style.display='inline-block';
+  showWizard();
+  goToStep(1);
+  populateWizardFields();
+}
+
+function validateStep(n){
+  if(n===3 && !Object.values(profile.meals).some(Boolean)){
+    alert('Please select at least one meal to plan for.');
+    return false;
+  }
+  if(n===5){
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if(!key){ showGenError('Please paste an API key to continue.'); return false; }
+  }
+  return true;
+}
+function showGenError(msg){
+  document.getElementById('generateErrorMsg').textContent = msg;
+  document.getElementById('generateError').classList.add('show');
+}
+
+function onNextClicked(){
+  if(!validateStep(currentStep)) return;
+  if(currentStep < 5){
+    goToStep(currentStep+1);
+  } else {
+    generatePlan();
+  }
+}
+
+/* =========================================================
+   PROMPT BUILDING
+========================================================= */
+function buildPrompt(){
+  const slots = Object.keys(profile.meals).filter(k=>profile.meals[k]).map(s=> s[0].toUpperCase()+s.slice(1));
+  const dietLine = profile.diet==='other' ? (profile.dietOther||'Other') : DIET_OPTIONS.find(o=>o.v===profile.diet).t;
+  const goalLine = GOAL_OPTIONS.find(o=>o.v===profile.goal).t;
+  const allergyList = [...profile.allergies, ...(profile.allergyOther? profile.allergyOther.split(',').map(s=>s.trim()).filter(Boolean):[])];
+  const cuisineList = [...profile.cuisines, ...profile.cuisineCustom];
+  const scheduleLines = DAYS.map(d=>`${d}: ${profile.schedule[d]}`).join(', ');
+
+  const profileText = `
+USER PROFILE
+- Diet: ${dietLine}
+- Primary goal: ${goalLine}
+- Activity level: ${profile.activity}
+- Daily calorie target: ${profile.calorieTarget ? profile.calorieTarget+' kcal' : 'not specified — estimate something sensible for the stated goal and activity level'}
+- Allergies / intolerances (NEVER include these, treat as hard constraints): ${allergyList.length?allergyList.join(', '):'none'}
+- Medical / lifestyle restrictions: ${profile.medical.length?profile.medical.join(', '):'none'}
+- Disliked foods (avoid as a primary ingredient): ${profile.dislikes.length?profile.dislikes.join(', '):'none specified'}
+- Preferred cuisines (lean toward these, but vary the week): ${cuisineList.length?cuisineList.join(', '):'no strong preference, use varied everyday food'}
+- Spice tolerance: ${profile.spice}
+- Servings needed per meal: ${profile.servings}
+- Meals to plan each day: ${slots.join(', ')}
+- Weekly schedule (busy days = minimal effort meals, free days = good for batch cooking): ${scheduleLines}
+- Max cook time on busy days: ${profile.busyTime} minutes
+- Max cook time on free days: ${profile.freeTime} minutes
+- Kitchen equipment available: ${profile.equipment.length?profile.equipment.join(', '):'basic stove only'}
+- Batch cooking preference: ${profile.batchPref==='yes' ? 'Prefers batch-cooking on free days and reusing it across busy days (use leftovers/components heavily)' : 'Prefers cooking fresh most days, light batching only'}
+- Extra notes from the user: ${profile.notes || 'none'}
+`.trim();
+
+  const schema = `
+Return ONLY valid JSON (no markdown fences, no commentary before or after) matching exactly this structure:
+
+{
+  "summary": "2-3 warm, specific sentences from a chef/coach introducing this week's plan and how it fits the user's goal and schedule",
+  "avgDailyCalories": 0,
+  "avgDailyProtein": 0,
+  "days": [
+    {
+      "day": "Monday",
+      "busy": true,
+      "meals": [
+        { "slot": "Breakfast", "name": "Dish name", "description": "1-2 sentence description of the dish and why it fits", "calories": 0, "protein": 0, "prepTime": "10 min", "usesLeftover": false }
+      ]
+    }
+  ],
+  "groceryList": [
+    { "category": "Produce", "items": [ { "name": "Spinach", "quantity": "4", "unit": "cups" } ] }
+  ],
+  "prepSchedule": [
+    { "day": "Sunday", "busy": false, "tasks": ["Batch-cook quinoa for the week", "Marinate chicken for Mon and Tue dinners"] }
+  ],
+  "tips": ["short, practical tip"]
+}
+
+Rules:
+- "days" must contain exactly these 7 days in this order: ${DAYS.join(', ')}, each with "busy" matching: ${scheduleLines}
+- Each day's "meals" array must contain exactly these slots, in this order: ${slots.join(', ')}
+- groceryList must consolidate (sum) ingredient quantities used across the whole week into one entry per ingredient, grouped into sensible grocery categories (e.g. Produce, Protein, Dairy & Alternatives, Grains & Pantry, Spices & Condiments, Frozen, Other)
+- prepSchedule should cover the days that make sense for batch cooking (usually free days) and explain what to cook ahead and which later meals it covers
+- Never include any allergen listed above, anywhere
+- Use realistic, varied, everyday recipes — not exotic or hard-to-find ingredients unless the user's preferred cuisines call for it
+- All numbers must be plain numbers, not strings
+`.trim();
+
+  return profileText + '\n\n' + schema;
+}
+
+/* =========================================================
+   API CALLS
+========================================================= */
+function resolveModel(){
+  const sel = document.getElementById('modelSelect');
+  if(sel && sel.value){
+    if(sel.value==='__custom__') return document.getElementById('customModelInput').value.trim() || apiConfig.customModel;
+    return sel.value;
+  }
+  return apiConfig.model;
+}
+
+async function callGemini(model, key, prompt){
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      contents:[{parts:[{text:prompt}]}],
+      generationConfig:{ response_mime_type:'application/json', temperature:0.8 }
+    })
+  });
+  const data = await res.json();
+  if(!res.ok){
+    throw new Error((data && data.error && data.error.message) || `Gemini API error (${res.status})`);
+  }
+  const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('') || '';
+  if(!text) throw new Error('Gemini returned an empty response. It may have blocked the request — try a different model or rephrase your notes.');
+  return text;
+}
+
+async function callGroq(model, key, prompt){
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+    body: JSON.stringify({
+      model,
+      messages:[
+        {role:'system', content:'You are an expert nutrition coach and meal-prep planner. You always reply with strictly valid JSON only — no markdown, no commentary.'},
+        {role:'user', content: prompt}
+      ],
+      response_format:{type:'json_object'},
+      temperature:0.8
+    })
+  });
+  const data = await res.json();
+  if(!res.ok){
+    throw new Error((data && data.error && data.error.message) || `Groq API error (${res.status})`);
+  }
+  const text = data?.choices?.[0]?.message?.content || '';
+  if(!text) throw new Error('Groq returned an empty response.');
+  return text;
+}
+
+function extractJSON(text){
+  let cleaned = text.trim();
+  cleaned = cleaned.replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if(start===-1 || end===-1) throw new Error('No JSON object found in the model response.');
+  const jsonStr = cleaned.slice(start, end+1);
+  return JSON.parse(jsonStr);
+}
+
+let loadingInterval = null;
+function startLoadingMessages(){
+  let i=0;
+  document.getElementById('loadingMsg').textContent = LOADING_MESSAGES[0];
+  loadingInterval = setInterval(()=>{
+    i = (i+1) % LOADING_MESSAGES.length;
+    document.getElementById('loadingMsg').textContent = LOADING_MESSAGES[i];
+  }, 1800);
+}
+function stopLoadingMessages(){ clearInterval(loadingInterval); }
+
+async function generatePlan(){
+  const key = (document.getElementById('apiKeyInput') && document.getElementById('apiKeyInput').value.trim()) || apiConfig.key;
+  if(!key){ showGenError('Please paste an API key first.'); return; }
+  apiConfig.key = key;
+  apiConfig.model = resolveModel();
+  if(!apiConfig.model){ showGenError('Please choose or enter a model.'); return; }
+  apiConfig.save = document.getElementById('saveKeyCheckbox') ? document.getElementById('saveKeyCheckbox').checked : apiConfig.save;
+
+  showWizard();
+  document.getElementById('generateError').classList.remove('show');
+  document.querySelectorAll('.wiz-step').forEach(s=> s.style.display='none');
+  document.getElementById('wizardNav').style.display='none';
+  document.getElementById('stepper').style.display='none';
+  document.getElementById('loadingScreen').classList.add('show');
+  startLoadingMessages();
+
+  const prompt = buildPrompt();
+  try{
+    let raw;
+    if(apiConfig.provider==='gemini') raw = await callGemini(apiConfig.model, apiConfig.key, prompt);
+    else raw = await callGroq(apiConfig.model, apiConfig.key, prompt);
+    const parsed = extractJSON(raw);
+    plan = parsed;
+    groceryChecked = {};
+    saveProfileAndApi();
+    savePlan();
+    saveGroceryChecked();
+    stopLoadingMessages();
+    document.getElementById('loadingScreen').classList.remove('show');
+    isEditing = false;
+    document.getElementById('cancelEditBtn').style.display='none';
+    showDashboard();
+  }catch(err){
+    stopLoadingMessages();
+    document.getElementById('loadingScreen').classList.remove('show');
+    document.getElementById('wizardNav').style.display='flex';
+    document.getElementById('stepper').style.display='flex';
+    goToStep(5);
+    showGenError(err.message || 'Something went wrong talking to the API.');
+  }
+}
+
+/* =========================================================
+   VIEW SWITCHING
+========================================================= */
+function showWizard(){
+  document.getElementById('wizardView').style.display='block';
+  document.getElementById('dashboardView').classList.remove('show');
+  document.getElementById('wizardNav').style.display='flex';
+  document.getElementById('stepper').style.display='flex';
+  document.getElementById('startOverBtn').style.display = plan ? 'inline-block':'none';
+}
+function showDashboard(){
+  document.getElementById('wizardView').style.display='none';
+  document.getElementById('dashboardView').classList.add('show');
+  document.getElementById('startOverBtn').style.display='inline-block';
+  renderDashboard();
+}
+
+/* =========================================================
+   DASHBOARD RENDERING
+========================================================= */
+const TABS = [
+  {id:'overview', label:'Overview'},
+  {id:'mealplan', label:'Meal Plan'},
+  {id:'grocery', label:'Grocery List'},
+  {id:'prep', label:'Prep Timeline'},
+];
+function renderTabRail(){
+  const rail = document.getElementById('tabRail');
+  rail.innerHTML='';
+  TABS.forEach((tab,i)=>{
+    const btn = el('button','tab-btn'+(i===0?' active':''), tab.label);
+    btn.addEventListener('click', ()=> activateTab(tab.id));
+    btn.dataset.tab = tab.id;
+    rail.appendChild(btn);
+  });
+}
+function activateTab(id){
+  document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===id));
+  document.querySelectorAll('.tab-panel').forEach(p=> p.classList.toggle('active', p.id==='panel-'+id));
+}
+
+function renderDashboard(){
+  if(!plan) return;
+  renderTabRail();
+  activateTab('overview');
+  renderOverview();
+  renderCalendar();
+  renderGroceryList();
+  renderPrepTimeline();
+}
+
+function renderOverview(){
+  document.getElementById('chefNoteText').textContent = plan.summary || 'Your plan is ready.';
+  const stats = document.getElementById('statGrid');
+  stats.innerHTML='';
+  const statDefs = [
+    [plan.avgDailyCalories ? plan.avgDailyCalories+' kcal' : '—', 'Avg. daily calories'],
+    [plan.avgDailyProtein ? plan.avgDailyProtein+'g' : '—', 'Avg. daily protein'],
+    [DAYS.filter(d=>profile.schedule[d]==='free').length, 'Free days this week'],
+    [profile.servings, 'Servings per meal'],
+  ];
+  statDefs.forEach(([v,l])=>{
+    const c = el('div','stat-card', `<div class="sv">${v}</div><div class="sl">${l}</div>`);
+    stats.appendChild(c);
+  });
+
+  const dietLine = profile.diet==='other' ? (profile.dietOther||'Other') : DIET_OPTIONS.find(o=>o.v===profile.diet).t;
+  const goalLine = GOAL_OPTIONS.find(o=>o.v===profile.goal).t;
+  const allergyList = [...profile.allergies, ...(profile.allergyOther? profile.allergyOther.split(',').map(s=>s.trim()).filter(Boolean):[])];
+  const cuisineList = [...profile.cuisines, ...profile.cuisineCustom];
+  const recap = document.getElementById('profileRecap');
+  function row(label, html){ return `<div class="recap-row"><div class="rl">${label}</div><div class="rv">${html}</div></div>`; }
+  function tags(arr){ return arr.length ? arr.map(a=>`<span class="tag-mini">${escapeHtml(a)}</span>`).join('') : '<span class="empty-note">none</span>'; }
+  recap.innerHTML =
+    row('Diet', dietLine) +
+    row('Goal', goalLine) +
+    row('Allergies', tags(allergyList)) +
+    row('Dislikes', tags(profile.dislikes)) +
+    row('Preferred cuisines', tags(cuisineList)) +
+    row('Schedule', DAYS.map(d=>`<span class="tag-mini" style="color:${profile.schedule[d]==='free'?'var(--sage)':'var(--rust)'}">${d.slice(0,3)}: ${profile.schedule[d]}</span>`).join(''));
+}
+
+function renderCalendar(){
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML='';
+  const slots = Object.keys(profile.meals).filter(k=>profile.meals[k]).map(s=> s[0].toUpperCase()+s.slice(1));
+  grid.appendChild(el('div','cal-corner'));
+  (plan.days||[]).forEach(dayObj=>{
+    const head = el('div','cal-daycol-head', `<span class="dn">${dayObj.day.slice(0,3)}</span><span class="db ${dayObj.busy?'busy':'free'}">${dayObj.busy?'Busy':'Free'}</span>`);
+    grid.appendChild(head);
+  });
+  slots.forEach(slot=>{
+    grid.appendChild(el('div','cal-slot-label', slot));
+    (plan.days||[]).forEach(dayObj=>{
+      const meal = (dayObj.meals||[]).find(m=> (m.slot||'').toLowerCase()===slot.toLowerCase());
+      if(!meal){ grid.appendChild(el('div','meal-cell', '<span class="empty-note">—</span>')); return; }
+      const cell = el('div','meal-cell'+(meal.usesLeftover?' leftover':''));
+      cell.innerHTML = `
+        <span class="mn">${escapeHtml(meal.name||'Untitled dish')}</span>
+        <span class="md">${escapeHtml((meal.description||'').slice(0,70))}${(meal.description||'').length>70?'…':''}</span>
+        <div class="mmeta">
+          ${meal.calories?`<span class="mbadge">${meal.calories} kcal</span>`:''}
+          ${meal.protein?`<span class="mbadge">${meal.protein}g protein</span>`:''}
+          ${meal.prepTime?`<span class="mbadge">${escapeHtml(meal.prepTime)}</span>`:''}
+        </div>
+        <div class="full-desc">${escapeHtml(meal.description||'')}${meal.usesLeftover?' <em>(uses leftovers)</em>':''}</div>
+      `;
+      cell.addEventListener('click', ()=> cell.classList.toggle('expanded'));
+      grid.appendChild(cell);
+    });
+  });
+}
+
+function groceryItemKey(cat, item){ return cat+'::'+item.name+'::'+(item.quantity||'')+(item.unit||''); }
+
+function renderGroceryList(){
+  const grid = document.getElementById('groceryGrid');
+  grid.innerHTML='';
+  let total=0, checked=0;
+  (plan.groceryList||[]).forEach(cat=>{
+    const card = el('div','grocery-card');
+    const items = cat.items||[];
+    total += items.length;
+    let catChecked = 0;
+    const itemsHtml = items.map(item=>{
+      const key = groceryItemKey(cat.category, item);
+      const isChecked = !!groceryChecked[key];
+      if(isChecked) catChecked++;
+      return `<div class="grocery-item${isChecked?' checked':''}" data-key="${escapeHtml(key)}">
+        <input type="checkbox" ${isChecked?'checked':''}>
+        <label>${escapeHtml(item.name)}</label>
+        <span class="qty">${escapeHtml((item.quantity||'')+' '+(item.unit||''))}</span>
+      </div>`;
+    }).join('');
+    checked += catChecked;
+    card.innerHTML = `<h3>${escapeHtml(cat.category)} <span class="cnt">${catChecked}/${items.length}</span></h3>${itemsHtml}`;
+    grid.appendChild(card);
+  });
+  grid.querySelectorAll('.grocery-item').forEach(rowEl=>{
+    const cb = rowEl.querySelector('input');
+    function toggle(){
+      const key = rowEl.dataset.key;
+      groceryChecked[key] = !groceryChecked[key];
+      saveGroceryChecked();
+      renderGroceryList();
+    }
+    cb.addEventListener('change', toggle);
+    rowEl.querySelector('label').addEventListener('click', e=>{ e.preventDefault(); toggle(); });
+  });
+  document.getElementById('groceryProgressLabel').textContent = `${checked} of ${total} checked`;
+  document.getElementById('groceryProgressFill').style.width = total ? Math.round(checked/total*100)+'%' : '0%';
+}
+
+function renderPrepTimeline(){
+  const tl = document.getElementById('prepTimeline');
+  tl.innerHTML='';
+  (plan.prepSchedule||[]).forEach(dayObj=>{
+    const item = el('div','tl-item'+(dayObj.busy?' busy-day':''));
+    item.innerHTML = `<div class="dot"></div><div class="tl-card">
+      <div class="tl-head"><h4>${escapeHtml(dayObj.day)}</h4><span class="db ${dayObj.busy?'busy':'free'}">${dayObj.busy?'Busy day':'Free day'}</span></div>
+      <ul>${(dayObj.tasks||[]).map(t=>`<li>${escapeHtml(t)}</li>`).join('')}</ul>
+    </div>`;
+    tl.appendChild(item);
+  });
+  const tipsCard = document.getElementById('tipsCard');
+  if(plan.tips && plan.tips.length){
+    tipsCard.style.display='block';
+    document.getElementById('tipsList').innerHTML = plan.tips.map(t=>`<li>${escapeHtml(t)}</li>`).join('');
+  } else {
+    tipsCard.style.display='none';
+  }
+}
+
+/* =========================================================
+   PRINT & DOWNLOAD
+========================================================= */
+function buildGroceryText(){
+  let lines = [`THE WEEKLY PLATE — GROCERY LIST`, ''];
+  (plan.groceryList||[]).forEach(cat=>{
+    lines.push(cat.category.toUpperCase());
+    (cat.items||[]).forEach(item=>{
+      const key = groceryItemKey(cat.category, item);
+      const mark = groceryChecked[key] ? '[x]' : '[ ]';
+      lines.push(`  ${mark} ${item.name} — ${item.quantity||''} ${item.unit||''}`.trim());
+    });
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+function printGroceryList(){
+  const area = document.getElementById('printArea');
+  let html = `<h1>The Weekly Plate</h1><div style="color:#444;margin-bottom:10px;">Grocery List</div>`;
+  (plan.groceryList||[]).forEach(cat=>{
+    html += `<div class="pcat">${escapeHtml(cat.category)}</div>`;
+    (cat.items||[]).forEach(item=>{
+      const key = groceryItemKey(cat.category, item);
+      const mark = groceryChecked[key] ? '☑' : '☐';
+      html += `<div class="pitem">${mark} ${escapeHtml(item.name)} — ${escapeHtml((item.quantity||'')+' '+(item.unit||''))}</div>`;
+    });
+  });
+  area.innerHTML = html;
+  window.print();
+}
+function downloadGroceryList(){
+  const text = buildGroceryText();
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'grocery-list.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+function init(){
+  loadStorage();
+  wireStaticInputs();
+  populateWizardFields();
+  if(plan){
+    showDashboard();
+  } else {
+    showWizard();
+    goToStep(1);
+  }
+}
+init();
+</script>
+</body>
+</html>
